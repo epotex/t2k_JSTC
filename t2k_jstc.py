@@ -75,16 +75,33 @@ urls = {'math' :'https://s3.amazonaws.com/asnstaticd2l/data/manifest/D10003FB.js
         'txela':'https://s3.amazonaws.com/asnstaticd2l/data/manifest/D100036C.json',
         'txmath':'https://s3.amazonaws.com/asnstaticd2l/data/manifest/D2486388.json'
         }
-
-URL = urls[Discipline.lower()]
-URL = urls[Discipline.lower()]
-discipline_name = Discip[Discipline.lower()]
-name = names[Discipline.lower()]
-State =stats_list[Discipline.lower()]
-Standard_Package = Package[Discipline.lower()]
-grade_name = NUM2NAME[gradefilter]
+try:
+    URL = urls[Discipline.lower()]
+    URL = urls[Discipline.lower()]
+    discipline_name = Discip[Discipline.lower()]
+    name = names[Discipline.lower()]
+    State =stats_list[Discipline.lower()]
+    Standard_Package = Package[Discipline.lower()]
+    grade_name = NUM2NAME[gradefilter]
+except KeyError:
+    pass
 Country='USA'
-
+def usage():
+    print "t2k_jstc.py -d Discipline -g Grade Level"
+    print "Example:"
+    print "t2k_jstc.py -d ela -g 7"
+    print " "
+    print "Currently the following standards supported:"
+    print "Standards for ELA"
+    print "##########"
+    print "Texas standards| txela(for the -d option)"
+    print "CCSS standards| ela(for the -d option)"
+    print "##########"
+    print " "
+    print "Standards for Math"
+    print "##########"
+    print "Texas standards| txmath(for the -d option)"
+    print "CCSS standards| math(for the -d option)"
 #Functions:
 
 """Get the element grade level"""
@@ -121,7 +138,7 @@ def csv_output(*args):
 def comparevalue(entity, val):
     for i in entity[EDU_LABEL]:
         try:
-            pref = i['prefLabel']
+            pref = i[PREF_LABEL]
         except (KeyError, TypeError):
             continue
         if pref == val:
@@ -488,4 +505,6 @@ if __name__ == '__main__':
         e = select_entities(doc, gradefilter)
         TX_MATH()
         logging.info('DONE! %s has been created', filename)
-        
+    else:
+        print "Please reade the usage:"
+        usage()  
