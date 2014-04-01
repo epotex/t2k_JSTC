@@ -10,7 +10,7 @@ import os
 
 ##############
 """Logging vars"""
-logging.basicConfig(filename='jsonparser.log',level=logging.DEBUG, format='%(asctime)s %(message)s') 
+logging.basicConfig(filename='t2k_jstc.log',level=logging.DEBUG, format='%(asctime)s %(message)s') 
 logging.info('###############New Run###############')
 
 """Parser Vars"""
