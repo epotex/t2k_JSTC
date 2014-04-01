@@ -87,6 +87,7 @@ except KeyError:
     pass
 Country='USA'
 def usage():
+    print "Usage:"
     print "t2k_jstc.py -d Discipline -g Grade Level"
     print "Example:"
     print "t2k_jstc.py -d ela -g 7"
@@ -506,5 +507,5 @@ if __name__ == '__main__':
         TX_MATH()
         logging.info('DONE! %s has been created', filename)
     else:
-        print "Please reade the usage:"
+        
         usage()  
