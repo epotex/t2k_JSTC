@@ -1,7 +1,7 @@
 t2k_JSTC
 ========
 This Python code will download a state/CCSS json files from "http://asn.jesandco.org/resources/ASNJurisdiction"
-and parse the into csv file by group age
+and parse in into csv file by group age.
 
 
 current supported files:
