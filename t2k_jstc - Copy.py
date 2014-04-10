@@ -8,6 +8,9 @@ import time
 import logging
 import os
 
+
+#Version 0.3
+
 ##############
 """Logging vars"""
 logging.basicConfig(filename='t2k_jstc.log',level=logging.DEBUG, format='%(asctime)s %(message)s') 
@@ -19,7 +22,7 @@ parser.add_argument("-d", "--Discipline", help="Choose your Discipline (Ela or M
 parser.add_argument("-g", "--grade", help="Choose your grade level")
 args = parser.parse_args()
 #Discipline = args.Discipline """CMD Vars""" 
-Discipline = "txela"
+Discipline = "ela"
 #gradefilter = args.grade """CMD Vars"""
 gradefilter = "8"
 EDU_LABEL = 'dcterms_educationLevel'
@@ -168,7 +171,23 @@ def tx_notation(child,father):
     cnoteid = re.findall("s/\([^)]*\)//", child['asn_listID'].strip())
     for note in father['asn_listID'].strip():
         for childnote in child['asn_listID'].strip():
-            return noteid[0], cnoteid[0] 
+            return noteid[0], cnoteid[0]
+        
+
+
+"""Grade filter function"""
+def grade_checker(layer):
+    for x in layer['dcterms_educationLevel']:
+        
+        try:
+            if gradefilter == x[PREF_LABEL]:
+                print x[PREF_LABEL]
+                print x['uri']
+
+                return True
+
+        except TypeError:
+                continue 
 
 """CCSS ELA Parsing"""
 
@@ -189,69 +208,83 @@ def CCSS_ELA():
            )   
 
     for father in e:
-        csv_output('father',
-                   Country,
-                   State,
-                   Standard_Package,
-                   discipline_name.upper().strip(),
-                   grade_name,
-                   get_asn_id(father['id']),
-                   Standard_Package,
-                   'FALSE',
-                   father['text'].encode( "utf-8" )
-                   )
-        for child in father['children']:
-            for agegroup in child['dcterms_educationLevel']:
-                if gradefilter in agegroup.values():
-                    #Child
+        if grade_checker(father):
+            csv_output('father',
+                       Country,
+                       State,
+                       Standard_Package,
+                       discipline_name.upper().strip(),
+                       grade_name,
+                       #get_asn_id(father['id']),
+                       'CCSS2014',
+                       Standard_Package,
+                       'FALSE',
+                       father['text'].encode( "utf-8" )
+                       )
+            for children in father['children']:
+                if grade_checker(children):
                     csv_output('child',
                         Country.strip(),
                         State.strip(),
                         Standard_Package.strip(),
                         discipline_name.upper().strip(),
-                        grade_name,
-                        get_asn_id(child['id']),
-                        get_asn_id(father['id']),
+                        grade_name,get_asn_id(children['id']),
+                        #get_asn_id(father['id']),
+                        'CCSS2014',
                         'FALSE',
-                        child['text'].encode( "utf-8" ),
+                        children['text'].encode( "utf-8" ),
                         )
-                    for grandchild in child['children']:
-                         try:
-  
-                             csv_output( 'grand',
-                                Country,
-                                State,
-                                Standard_Package,
-                                discipline_name.upper(),
-                                grade_name,
-                                #get_asn_id(grandchild['id']),
-                                child['asn_statementNotation'].strip(),
-                                #get_asn_id(children['id']),
-                                grandchild['asn_statementNotation'].strip(),
-                                'TRUE', 
-                                grandchild['asn_statementNotation'].strip(),
-                                grandchild['text'].encode( "utf-8" )
-                                )
-                       
-                         except KeyError:
-                             continue
-                      
-                             #==================================================
-                             # csv_output(
-                             #    Country,
-                             #    State,
-                             #    Standard_Package,
-                             #    discipline_name.upper(),
-                             #    grade_name,
-                             #    get_asn_id(grandchild['id']),
-                             #    get_asn_id(child['id']),
-                             #    'TRUE', 
-                             #    grandchild['text'].encode( "utf-8" )
-                             #    )
-                             #==================================================
-          
-    logging.info('Json parding ended')
-
+                         
+                    for grandchild in children['children']:
+                        #if grade_checker(grandchild):
+                             try:
+                                 csv_output( 'grand',
+                                    Country,
+                                    State,
+                                    Standard_Package,
+                                    discipline_name.upper(),
+                                    grade_name,
+                                    get_asn_id(grandchild['id']),
+                                    get_asn_id(children['id']),
+                                    'TRUE', 
+                                    grandchild['asn_statementNotation'].strip(),
+                                    grandchild['text'].encode( "utf-8" )
+                                    )
+                             except KeyError:
+                                 continue
+                                 csv_output('grandalt',
+                                   Country,
+                                   State,
+                                   Standard_Package,
+                                   discipline_name.upper(),
+                                   grade_name,
+                                   get_asn_id(grandchild['id']),
+                                   get_asn_id(children['id']),
+                                   'TRUE', 
+                                   grandchild['text'].encode( "utf-8" )
+                                   )
+           
+                try:
+                    for grandgrand in grandchild['children']:
+                        #print grandgrand['dcterms_educationLevel'][PREF_LABEL]
+                        if grade_checker(grandgrand):
+                                csv_output( 'grandgrand',
+                                    Country,
+                                    State,
+                                    Standard_Package,
+                                    discipline_name.upper(),
+                                    grade_name,
+                                    get_asn_id(grandgrand['id']),
+                                    get_asn_id(grandchild['id']),
+                                    'TRUE', 
+                                    grandgrand['asn_statementNotation'].strip(),
+                                    grandgrand['text'].encode( "utf-8" )
+                                    )
+                except KeyError:
+                    continue
+                 
+logging.info('Json parding ended')
+    
 """CCSS MATH Parsing"""
 def CCSS_Math():
     logging.info('Json parding started')
@@ -284,7 +317,8 @@ def CCSS_Math():
                            )
                 for children in father['children']:
                 #Child
-                    csv_output(Country.strip(),
+                    csv_output('children',
+                        Country.strip(),
                         State.strip(),
                         Standard_Package.strip(),
                         discipline_name.upper().strip(),
@@ -295,7 +329,8 @@ def CCSS_Math():
                         )
                     try:
                         for grandchild in children['children']:
-                            csv_output(Country.strip(),
+                            csv_output('grandchild',
+                                Country.strip(),
                                 State.strip(),
                                 Standard_Package.strip(),
                                 discipline_name.upper().strip(),
@@ -308,6 +343,22 @@ def CCSS_Math():
                     except KeyError:
                         try:
                             print children['children']
+                        except KeyError:
+                            continue
+                        try:
+                            for grandgrand in grandchild['children']:
+                                   csv_output( 'grandgrand',
+                                            Country,
+                                            State,
+                                            Standard_Package,
+                                            discipline_name.upper(),
+                                            grade_name,
+                                            get_asn_id(grandgrand['id']),
+                                            get_asn_id(grandchild['id']),
+                                            'TRUE', 
+                                            grandgrand['asn_statementNotation'].strip(),
+                                            grandgrand['text'].encode( "utf-8" )
+                                            )
                         except KeyError:
                             continue
     logging.info('Json parding ended')
@@ -330,34 +381,26 @@ def TX_ELA():
 
     for father in e:
       
-
         csv_output(
                    Country,
                    State,
                    Standard_Package,
                    discipline_name.upper().strip(),
                    grade_name,
-                   #get_asn_id(father['id']),
-                   'TEKS2014',
+                   get_asn_id(father['id']),
                    Standard_Package,
                    'FALSE',
                    father['text'].encode( "utf-8" )
                    )        
         for child in father['children']:
         #Child
-         
-
-            #print child.keys()
-            csv_output(child['dcterms_educationLevel'],
+            csv_output(
                 Country,
                 State,
                 Standard_Package,
                 discipline_name.upper().strip(),
-                grade_name,
-                #get_asn_id(child['id']),
-                child['asn_listID'].strip('-'),
-                #get_asn_id(father['id']),
-                'TEKS2014',
+                grade_name,get_asn_id(child['id']),
+                get_asn_id(father['id']),
                 'FALSE',
                 child['text'].encode( "utf-8" )
                 )
@@ -366,15 +409,13 @@ def TX_ELA():
                    cnote = str(child['asn_listID'].strip().strip("()"))
                    gnote =  str(grandchild['asn_listID'].strip().strip("()"))
                    StatementNotation =  cnote +"."+ gnote
-                   csv_output(grandchild['dcterms_educationLevel'],
+                   csv_output(
                         Country,
                         State,
                         Standard_Package,
                         discipline_name.upper().strip(),
-                        grade_name,
-                        #get_asn_id(grandchild['id']),
-                        StatementNotation,
-                        child['asn_listID'].strip('-'),
+                        grade_name,get_asn_id(grandchild['id']),
+                        get_asn_id(child['id']),
                         'TRUE',
                         StatementNotation,
                         grandchild['text'].encode( "utf-8" )
